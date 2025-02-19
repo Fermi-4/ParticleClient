@@ -3,7 +3,7 @@
     <groupId>io.github.fermi-4</groupId>
     <artifactId>particle-client</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <url>http://www.particle.io</url>
     <description>A library for interacting with Particle.io API</description>

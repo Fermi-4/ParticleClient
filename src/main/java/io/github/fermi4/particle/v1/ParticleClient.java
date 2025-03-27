@@ -31,7 +31,7 @@ import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
 
 public class ParticleClient {
-    
+
     private final ObjectMapper mapper;
     private OkHttpClient client;
     private String token;
@@ -41,7 +41,7 @@ public class ParticleClient {
     private ParticleClient(ParticleClientV1Builder builder) {
         this.mapper = builder.mapper;
         this.client = builder.client;
-        this.token  = builder.token;
+        this.token = builder.token;
         this.username = builder.username;
         this.password = builder.password;
     }
@@ -52,6 +52,7 @@ public class ParticleClient {
         private String token;
         private String username;
         private String password;
+
         private ParticleClientV1Builder() {
             this.client = getClient();
             this.mapper = getMapper();
@@ -79,7 +80,7 @@ public class ParticleClient {
             this.password = password;
             return this;
         }
-        
+
         public ParticleClientV1Builder withUsername(String username) {
             this.username = username;
             return this;
@@ -89,6 +90,7 @@ public class ParticleClient {
             return new ParticleClient(this);
         }
     }
+
     public static ParticleClientV1Builder builder() {
         return new ParticleClientV1Builder();
     }
@@ -99,7 +101,7 @@ public class ParticleClient {
         httpClientBuilder.connectTimeout(30000, TimeUnit.MILLISECONDS);
         return httpClientBuilder.build();
     }
-    
+
     private static ObjectMapper getMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new SimpleModule()
@@ -114,16 +116,16 @@ public class ParticleClient {
         Request request = new Request.Builder().url(url).build();
         return client.newCall(request).execute();
     }
-    
+
     private Response get(Request request) throws IOException {
         return client.newCall(request).execute();
     }
-    
-    private Response post(HttpUrl url, Map<?, ?> payloadData) throws IOException  {
+
+    private Response post(HttpUrl url, Map<?, ?> payloadData) throws IOException {
         String jsonPayload = mapper.writeValueAsString(payloadData);
         return post(url, jsonPayload);
     }
-    
+
     private Response post(Request request) throws IOException {
         return client.newCall(request).execute();
     }
@@ -134,7 +136,7 @@ public class ParticleClient {
         Request request = new Request.Builder().post(body).url(url).build();
         return client.newCall(request).execute();
     }
-    
+
     private Response post(HttpUrl url, RequestBody body) throws IOException {
         Request request = new Request.Builder()
                 .post(body)
@@ -148,13 +150,13 @@ public class ParticleClient {
         Request request = new Request.Builder().post(body).url(url).build();
         return client.newCall(request).execute();
     }
-    
+
     private Response put(HttpUrl url) throws IOException {
         RequestBody body = RequestBody.create(new byte[0]);
         Request request = new Request.Builder().put(body).url(url).build();
         return client.newCall(request).execute();
     }
-    
+
     private Response put(HttpUrl url, Map<?, ?> payloadData) throws IOException {
         String jsonPayload = mapper.writeValueAsString(payloadData);
         MediaType mediaType = MediaType.get("application/json; charset=utf-8");
@@ -162,11 +164,11 @@ public class ParticleClient {
         Request request = new Request.Builder().put(body).url(url).build();
         return client.newCall(request).execute();
     }
-    
+
     private Response put(Request request) throws IOException {
         return client.newCall(request).execute();
     }
-    
+
     private Response delete(HttpUrl url) throws IOException {
         Request request = new Request.Builder().delete().url(url).build();
         return client.newCall(request).execute();
@@ -180,28 +182,27 @@ public class ParticleClient {
                 .url(url)
                 .build();
     }
-    
-    private EventSource createEventSource(Request request, EventSourceListener listener) {
+
+    public EventSource createEventSource(Request request, EventSourceListener listener) {
         return EventSources.createFactory(client).newEventSource(request, listener);
     }
 
-
     public Response createToken(CreateTokenRequest requestParameters) throws IOException {
         RequestBody formBody = new FormBody.Builder()
-            .add("grant_type", requestParameters.getGrantType())
-            .add("username", requestParameters.getUsername())
-            .add("password", requestParameters.getPassword())
-            .add("client_id", requestParameters.getClientdId())
-            .add("client_secret", requestParameters.getClientSecret())
-            .add("expires_in", requestParameters.getExpiresIn())
-            .add("expires_at", requestParameters.getExpiresAt())
-            .build();
+                .add("grant_type", requestParameters.getGrantType())
+                .add("username", requestParameters.getUsername())
+                .add("password", requestParameters.getPassword())
+                .add("client_id", requestParameters.getClientdId())
+                .add("client_secret", requestParameters.getClientSecret())
+                .add("expires_in", requestParameters.getExpiresIn())
+                .add("expires_at", requestParameters.getExpiresAt())
+                .build();
 
         Request request = new Request.Builder()
-            .url(ParticleApiV1.getCreateAccessTokenHttpUrl())
-            .header("Authorization", Credentials.basic("particle", "particle"))
-            .post(formBody)
-            .build();
+                .url(ParticleApiV1.getCreateAccessTokenHttpUrl())
+                .header("Authorization", Credentials.basic("particle", "particle"))
+                .post(formBody)
+                .build();
 
         return client.newCall(request).execute();
     }
@@ -238,7 +239,7 @@ public class ParticleClient {
     public Response getDeviceInformation(String deviceId) throws IOException {
         return get(ParticleApiV1.getDeviceHttpUrl(token, deviceId));
     }
-    
+
     public Response addDeviceNotes(String deviceId, String notes) throws IOException {
         RequestBody formBody = new FormBody.Builder().add("notes", notes).build();
         Request request = new Request.Builder()
@@ -274,6 +275,11 @@ public class ParticleClient {
 
     public Response listDevicesInProduct(String productIdOrSlug) throws IOException {
         return get(ParticleApiV1.getDevicesInProductHttpUrl(token, productIdOrSlug));
+    }
+
+    public Response listDevicesInProduct(String productIdOrSlug, Map<String, String> queryParameters)
+            throws IOException {
+        return get(ParticleApiV1.getDevicesInProductHttpUrl(token, productIdOrSlug, queryParameters));
     }
 
     public Response getProductDeviceInformation(String productIdOrSlug, String deviceId) throws IOException {
@@ -360,38 +366,39 @@ public class ParticleClient {
         payloadData.put("sims", sims);
         return post(ParticleApiV1.getProductTeamHttpUrl(token, productOrSlugId), payloadData);
     }
-    
+
     public EventSource openEventStream(String eventPrefix, EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getAllEventsFiltered(token, eventPrefix));
         return createEventSource(request, listener);
     }
-    
+
     public EventSource openAllDeviceEventStream(EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getAllDeviceEvents(token));
         return createEventSource(request, listener);
     }
-    
+
     public EventSource openAllDeviceEventStream(String eventPrefix, EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getAllDeviceEventsFiltered(token, eventPrefix));
         return createEventSource(request, listener);
     }
-    
+
     public EventSource openDeviceEventStream(String deviceId, EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getDeviceEvents(token, deviceId));
         return createEventSource(request, listener);
     }
-    
+
     public EventSource openDeviceEventStream(String deviceId, String eventPrefix, EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getDeviceEventsFiltered(token, deviceId, eventPrefix));
         return createEventSource(request, listener);
     }
-    
+
     public EventSource openProductEventStream(String productIdOrSlug, EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getProductEvents(token, productIdOrSlug));
         return createEventSource(request, listener);
     }
-    
-    public EventSource openProductEventStream(String productIdOrSlug, String eventPrefix, EventSourceListener listener) {
+
+    public EventSource openProductEventStream(String productIdOrSlug, String eventPrefix,
+            EventSourceListener listener) {
         Request request = getSseRequest(ParticleApiV1.getProductEventsFiltered(token, productIdOrSlug, eventPrefix));
         return createEventSource(request, listener);
     }
@@ -446,11 +453,11 @@ public class ParticleClient {
     public Response removeProductUser(String productIdOrSlug, String username) throws IOException {
         return delete(ParticleApiV1.getUpdateProductTeamMemberHttpUrl(token, productIdOrSlug, username));
     }
-    
+
     public String getToken() {
         return token;
     }
-    
+
     public void setToken(String token) {
         this.token = token;
     }
@@ -458,11 +465,11 @@ public class ParticleClient {
     public String getUsername() {
         return username;
     }
-    
+
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
     public String getPassword() {
         return password;
     }
